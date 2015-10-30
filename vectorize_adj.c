@@ -13,10 +13,10 @@ int main(int argc, char **argv)
 	int i = 0;
 	size_t len = 0;
 
-	fi = fopen("80x10.adj","r");
-	fo = fopen("80x10vec.bin","wb");
+	fi = fopen("8x1.adj","r");
+	fo = fopen("8x1vec.bin","wb");
 
-	cmd = popen("wc -l 80x10.adj", "r");
+	cmd = popen("wc -l 8x1.adj", "r");
 	fgets(buff, sizeof(buff), cmd);
 	total_lines = atoi(buff);
 
@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 		i = 0;
 		int num;
 		token = strtok(buff, " ");
-		while((*token!='\n') || i < total_lines)
+		while(i < total_lines)
 		{
 			num = atoi(token);
 			if(i == num)
@@ -39,8 +39,8 @@ int main(int argc, char **argv)
 			}
 			char snum[5];
 			snprintf(snum,5,"%d",num);
+			printf("Writing %d to file\n",num);
 			fwrite(&num,sizeof num, 1, fo);
-
 			i+=1;
 		}
 	}
