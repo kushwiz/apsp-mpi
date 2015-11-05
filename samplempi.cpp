@@ -67,11 +67,13 @@ int main(int argc, char **argv)
 		int pe_layout_col_offset = rank%rootp;
 
 
-		int k = 7;
+		int k = 0;
 		int nbyrootp = n/rootp;
 
 		std::vector<int> rowDataBuffer(n/rootp);
 		std::vector<int> colDataBuffer(n/rootp);
+		std::vector<int> myRowData(n/rootp);
+		std::vector<int> myColData(nbyrootp);
 
 		if(pe_layout_row_offset == floor(k/nbyrootp) && (pe_layout_col_offset == floor(k/nbyrootp))) {
 			std::cout<<"world rank:"<<rank<<"---";
@@ -89,35 +91,56 @@ int main(int argc, char **argv)
 				colDataBuffer[i] = buffr[j];
 			}
 
-			std::cout<<"Col data:";
-			for(int i=0; i<colDataBuffer.size(); i++) {
-				std::cout<<colDataBuffer[i]<<" ";
-			}
+			//std::cout<<"Col data:";
+			//for(int i=0; i<colDataBuffer.size(); i++) {
+			//	std::cout<<colDataBuffer[i]<<" ";
+			//}
 
 			// Broadcast COL data to COL_COMM
 			MPI_Bcast(colDataBuffer.data(), colDataBuffer.size(), MPI_INT, pe_layout_col_offset, COL_COMM);
 
 		} else if(pe_layout_row_offset == floor(k/nbyrootp)) {
-			MPI_Bcast(rowDataBuffer.data(), rowDataBuffer.size(), MPI_INT, pe_layout_row_offset, ROW_COMM);
-		//	std::cout<<"Recd. data"<<rank<<"---";
-		//	for(int i=0;i<rowDataBuffer.size();i++) {
-		//		std::cout<<rowDataBuffer[i]<<" ";
-		//	}
 			// receive ROW from  row_offset(th) RANK.
+			MPI_Bcast(rowDataBuffer.data(), rowDataBuffer.size(), MPI_INT, pe_layout_row_offset, ROW_COMM);
+			//std::cout<<"row Recd. data"<<rank<<"---";
+			//for(int i=0;i<rowDataBuffer.size();i++) {
+			//	std::cout<<rowDataBuffer[i]<<" ";
+			//}
 			// keep a copy for myself
 			// Broadcast to my COL COMM.
+			memcpy(&myRowData[0], &buffr[(k%4)*nbyrootp], nbyrootp*sizeof(int));
+			MPI_Bcast(myRowData.data(), myRowData.size(), MPI_INT, col_rank, COL_COMM);
 		} else if(pe_layout_col_offset == floor(k/nbyrootp)) {
 			// receive COL from col_offset(th) RANK.
 			MPI_Bcast(colDataBuffer.data(), colDataBuffer.size(), MPI_INT, pe_layout_col_offset, COL_COMM);
-			std::cout<<"world rank:"<<rank<<"recv Col data:";
-			for(int i=0; i<colDataBuffer.size(); i++) {
+//			std::cout<<"world rank:"<<rank<<"recv Col data:";
+//			for(int i=0; i<colDataBuffer.size(); i++) {
+//				std::cout<<colDataBuffer[i]<<" ";
+//			}
+
+			// keep a copy for myself
+			// Broadcast my Col data to my ROW COMM.
+			for(int i=0, j=(k%nbyrootp); i<nbyrootp; i++, j+=nbyrootp) {
+				myColData[i] = buffr[j];
+			}
+
+
+			MPI_Bcast(myColData.data(), myColData.size(), MPI_INT, row_rank, ROW_COMM);
+		} else {
+			// Receive COL from ROW COMM.
+			MPI_Bcast(colDataBuffer.data(), colDataBuffer.size(), MPI_INT, floor(k/nbyrootp), ROW_COMM);
+			std::cout<<"new recv:"<<rank<<"---";
+			for(int i=0;i<colDataBuffer.size();i++) {
 				std::cout<<colDataBuffer[i]<<" ";
 			}
 
-			// keep a copy for myself
-			// Broad to my ROW COMM.
-		} else {
-			// Receive COL from ROW COMM.
+			MPI_Bcast(rowDataBuffer.data(), rowDataBuffer.size(), MPI_INT, floor(k/nbyrootp), COL_COMM);
+			std::cout<<"\nrow new recv:"<<rank<<"---";
+			for(int i=0;i<rowDataBuffer.size();i++) {
+				std::cout<<rowDataBuffer[i]<<" ";
+			}
+
+
 			// Receive ROW from COL COMM.
 		}		
 		
