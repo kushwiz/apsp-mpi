@@ -47,8 +47,11 @@ int main(int argc, char **argv)
 	int row_offset = (nsquare / rootp) * floor((rank) / rootp);
 	int col_offset = (rank%rootp) * n / rootp;
 
-	MPI_Comm_split(MPI_COMM_WORLD, row_offset, row_rank, &ROW_COMM);
- 	MPI_Comm_split(MPI_COMM_WORLD, col_offset, col_rank, &COL_COMM);	
+	MPI_Comm_split(MPI_COMM_WORLD, row_offset, 0, &ROW_COMM);
+ 	MPI_Comm_split(MPI_COMM_WORLD, col_offset, 0, &COL_COMM);	
+
+	MPI_Comm_rank(ROW_COMM, &row_rank);
+	MPI_Comm_rank(COL_COMM, &col_rank);
 
 	//if(rank == 0) {
 		MPI_File_set_view(thefile, (row_offset + col_offset)*sizeof(int), MPI_INT, MATRIX_INT_VECTOR, "native", MPI_INFO_NULL);
@@ -68,26 +71,49 @@ int main(int argc, char **argv)
 		int nbyrootp = n/rootp;
 
 		std::vector<int> rowDataBuffer(n/rootp);
+		std::vector<int> colDataBuffer(n/rootp);
 
 		if(pe_layout_row_offset == floor(k/nbyrootp) && (pe_layout_col_offset == floor(k/nbyrootp))) {
-			std::cout<<"world rank:"<<rank;
+			std::cout<<"world rank:"<<rank<<"---";
 			// make copy of row to send
-			memcpy(&rowDataBuffer[0], &buffr[k%n], (n/rootp)*sizeof(int));
-			MPI_Bcast(rowDataBuffer.data(), rowDataBuffer.size(), MPI_INT, row_rank, ROW_COMM);
-			// send data to others and receive nothing
+			memcpy(&rowDataBuffer[0], &buffr[(k%4)*nbyrootp], nbyrootp*sizeof(int));
+//			for(int i=0;i<rowDataBuffer.size();i++) {
+	//			std::cout<<rowDataBuffer[i]<<" ";
+	//		}
+			std::cout<<std::endl;
 			// Broadcast ROW data to ROW_COMM
-			// Broadcast COL data to COL_COMM
-		} else if(pe_layout_row_offset == floor(k/nbyrootp)) {
-			MPI_Bcast(rowDataBuffer.data(), rowDataBuffer.size(), MPI_INT, row_rank, ROW_COMM);
-			std::cout<<"Recd. data"<<rank<<"---";
-			for(int i=0;i<rowDataBuffer.size();i++) {
-				std::cout<<rowDataBuffer[i]<<" ";
+			MPI_Bcast(rowDataBuffer.data(), rowDataBuffer.size(), MPI_INT, pe_layout_row_offset, ROW_COMM);
+			// make copy of column to send
+			
+			for(int i=0, j=(k%nbyrootp); i<n/rootp; i++, j+=n/rootp) {
+				colDataBuffer[i] = buffr[j];
 			}
+
+			std::cout<<"Col data:";
+			for(int i=0; i<colDataBuffer.size(); i++) {
+				std::cout<<colDataBuffer[i]<<" ";
+			}
+
+			// Broadcast COL data to COL_COMM
+			MPI_Bcast(colDataBuffer.data(), colDataBuffer.size(), MPI_INT, pe_layout_col_offset, COL_COMM);
+
+		} else if(pe_layout_row_offset == floor(k/nbyrootp)) {
+			MPI_Bcast(rowDataBuffer.data(), rowDataBuffer.size(), MPI_INT, pe_layout_row_offset, ROW_COMM);
+		//	std::cout<<"Recd. data"<<rank<<"---";
+		//	for(int i=0;i<rowDataBuffer.size();i++) {
+		//		std::cout<<rowDataBuffer[i]<<" ";
+		//	}
 			// receive ROW from  row_offset(th) RANK.
 			// keep a copy for myself
 			// Broadcast to my COL COMM.
 		} else if(pe_layout_col_offset == floor(k/nbyrootp)) {
 			// receive COL from col_offset(th) RANK.
+			MPI_Bcast(colDataBuffer.data(), colDataBuffer.size(), MPI_INT, pe_layout_col_offset, COL_COMM);
+			std::cout<<"world rank:"<<rank<<"recv Col data:";
+			for(int i=0; i<colDataBuffer.size(); i++) {
+				std::cout<<colDataBuffer[i]<<" ";
+			}
+
 			// keep a copy for myself
 			// Broad to my ROW COMM.
 		} else {
