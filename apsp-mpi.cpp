@@ -44,10 +44,10 @@ int main(int argc, char **argv)
 
 	int row_offset = (nsquare / rootp) * floor((rank) / rootp);
 	int col_offset = (rank%rootp) * n / rootp;
-
+        
 	MPI_Comm_split(MPI_COMM_WORLD, row_offset, 0, &ROW_COMM);
  	MPI_Comm_split(MPI_COMM_WORLD, col_offset, 0, &COL_COMM);	
-
+        double t0 = MPI_Wtime();
 	MPI_Comm_rank(ROW_COMM, &row_rank);
 	MPI_Comm_rank(COL_COMM, &col_rank);
 
@@ -63,18 +63,19 @@ int main(int argc, char **argv)
 		int pe_layout_row_offset = floor(rank/rootp);
 		int pe_layout_col_offset = rank%rootp;
 
-
-		int k = 0;
+                
+		//int k = 0;
 		int nbyrootp = n/rootp;
 
 		std::vector<int> rowDataBuffer(nbyrootp);
 		std::vector<int> colDataBuffer(nbyrootp);
 		std::vector<int> myRowData(nbyrootp);
 		std::vector<int> myColData(nbyrootp);
-
+                for( int k=0;k<n;k++)
+                {
 		if(pe_layout_row_offset == floor(k/nbyrootp) && (pe_layout_col_offset == floor(k/nbyrootp))) {
 			// make copy of row to send
-			memcpy(&rowDataBuffer[0], &buffr[(k%4)*nbyrootp], nbyrootp*sizeof(int));
+			memcpy(&rowDataBuffer[0], &buffr[(k%nbyrootp)*nbyrootp], nbyrootp*sizeof(int));
 			// Broadcast ROW data to ROW_COMM
 			MPI_Bcast(rowDataBuffer.data(), rowDataBuffer.size(), MPI_INT, pe_layout_row_offset, ROW_COMM);
 			// make copy of column to send
@@ -96,14 +97,14 @@ int main(int argc, char **argv)
 			}
 
 			// Broadcast to my COL COMM.
-			memcpy(&myRowData[0], &buffr[(k%4)*nbyrootp], nbyrootp*sizeof(int));
+			memcpy(&myRowData[0], &buffr[(k%nbyrootp)*nbyrootp], nbyrootp*sizeof(int));
 			MPI_Bcast(myRowData.data(), myRowData.size(), MPI_INT, col_rank, COL_COMM);
 		} else if(pe_layout_col_offset == floor(k/nbyrootp)) {
 			// receive COL from col_offset(th) RANK.
 			MPI_Bcast(colDataBuffer.data(), colDataBuffer.size(), MPI_INT, pe_layout_col_offset, COL_COMM);
 
 			// Store my Row in RowDataBuffer	
-			memcpy(&rowDataBuffer[0], &buffr[(k%4)*nbyrootp], nbyrootp*sizeof(int));
+			memcpy(&rowDataBuffer[0], &buffr[(k%nbyrootp)*nbyrootp], nbyrootp*sizeof(int));
 			
 			// Broadcast my Col data to my ROW COMM.
 			for(int i=0, j=(k%nbyrootp); i<nbyrootp; i++, j+=nbyrootp) {
@@ -154,8 +155,13 @@ int main(int argc, char **argv)
 			}
 			std::cout<<std::endl;
 			MPI_Barrier(MPI_COMM_WORLD);
-		
-
+		} //end of k for loop
+        MPI_Barrier(MPI_COMM_WORLD);
+        double t1 = MPI_Wtime();
+        if(rank==0)
+        {
+            std::cout<<"Running time:" <<(t1-t0)<<std::endl;
+        }
 	//}
 
 	MPI_File_close(&thefile);
