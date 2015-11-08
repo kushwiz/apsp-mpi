@@ -53,12 +53,12 @@ int main(int argc, char **argv)
 
 		MPI_File_set_view(thefile, (row_offset + col_offset)*sizeof(int), MPI_INT, MATRIX_INT_VECTOR, "native", MPI_INFO_NULL);
 		MPI_File_read_all(thefile, buffr.data(), buffr.size(),  MPI_INT, &status);
-		std::cout<<"--"<<rank<<"--"<<row_offset<<"--"<<col_offset<<"--";
-		for(int i=0;i<((n/rootp) * (n/rootp));i++)
+		//std::cout<<"--"<<rank<<"--"<<row_offset<<"--"<<col_offset<<"--";
+		/*for(int i=0;i<((n/rootp) * (n/rootp));i++)
 		{
 			std::cout<<buffr[i]<<" ";
-		}
-		std::cout<<std::endl;
+		}*/
+		//std::cout<<std::endl;
 
 		int pe_layout_row_offset = floor(rank/rootp);
 		int pe_layout_col_offset = rank%rootp;
@@ -91,11 +91,11 @@ int main(int argc, char **argv)
 			// receive ROW from  row_offset(th) RANK.
 			MPI_Bcast(rowDataBuffer.data(), rowDataBuffer.size(), MPI_INT, pe_layout_row_offset, ROW_COMM);
 			// Store my column in ColDataBuffer
-
-			for(int i=0,j=(k%nbyrootp);i<nbyrootp;i++,j+=nbyrootp) {
+                        /*
+		       	for(int i=0,j=(k%nbyrootp);i<nbyrootp;i++,j+=nbyrootp) {
 				colDataBuffer[i] = buffr[j];
 			}
-
+                        */
 			// Broadcast to my COL COMM.
 			memcpy(&myRowData[0], &buffr[(k%nbyrootp)*nbyrootp], nbyrootp*sizeof(int));
 			MPI_Bcast(myRowData.data(), myRowData.size(), MPI_INT, col_rank, COL_COMM);
@@ -116,28 +116,28 @@ int main(int argc, char **argv)
 		} else {
 			// Receive COL from ROW COMM.
 			MPI_Bcast(colDataBuffer.data(), colDataBuffer.size(), MPI_INT, floor(k/nbyrootp), ROW_COMM);
-			std::cout<<"new recv:"<<rank<<"---";
-			for(int i=0;i<colDataBuffer.size();i++) {
-				std::cout<<colDataBuffer[i]<<" ";
-			}
+			/*std::cout<<"new recv:"<<rank<<"---";
+	  		for(int i=0;i<colDataBuffer.size();i++) {
+	 			std::cout<<colDataBuffer[i]<<" ";
+			}*/
 
 			// Receive ROW from COL COMM.
 			MPI_Bcast(rowDataBuffer.data(), rowDataBuffer.size(), MPI_INT, floor(k/nbyrootp), COL_COMM);
-			std::cout<<"\nrow new recv:"<<rank<<"---";
+		/*	std::cout<<"\nrow new recv:"<<rank<<"---";
 			for(int i=0;i<rowDataBuffer.size();i++) {
 				std::cout<<rowDataBuffer[i]<<" ";
-			}
+			}*/
 		}		
 		
 		MPI_Barrier(MPI_COMM_WORLD);
 
-			std::cout<<"Bellman Ford for rank:"<<rank;
+			//std::cout<<"Bellman Ford for rank:"<<rank;
 			int temp, temp1;
 			for(int i=0;i<nbyrootp;i++) 
 			{
 				for(int j=0;j<nbyrootp;j++) 
 				{
-					std::cout<<"--min("<<buffr[i*nbyrootp+j]<<","<<colDataBuffer[i]<<"+"<<rowDataBuffer[j]<<") ";
+					//std::cout<<"--min("<<buffr[i*nbyrootp+j]<<","<<colDataBuffer[i]<<"+"<<rowDataBuffer[j]<<") ";
 					if(rowDataBuffer[j]==0 || colDataBuffer[i]==0) {
 						temp = std::numeric_limits<int>::max();
 					} else {
@@ -149,11 +149,11 @@ int main(int argc, char **argv)
 					} else {
 						temp1 = buffr[i*nbyrootp+j];
 					}
-					std::cout<<((std::min(temp1, temp)==std::numeric_limits<int>::max())?0:std::min(temp1, temp))<<">>";
+					//std::cout<<((std::min(temp1, temp)==std::numeric_limits<int>::max())?0:std::min(temp1, temp))<<">>";
 					buffr[i*nbyrootp+j] = ((std::min(temp1, temp)==std::numeric_limits<int>::max())?0:std::min(temp1, temp));
 				}
 			}
-			std::cout<<std::endl;
+			//std::cout<<std::endl;
 			MPI_Barrier(MPI_COMM_WORLD);
 		} //end of k for loop
         MPI_Barrier(MPI_COMM_WORLD);
