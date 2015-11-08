@@ -1,7 +1,7 @@
 CC=mpiCC
 CFLAGS=-c -Wall
 LDFLAGS=
-SOURCES=samplempi.cpp
+SOURCES=apsp-mpi.cpp
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=mpiout
 
@@ -14,4 +14,4 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(CFLAGS) $< -o $@
 
 clean:
-	rm *.o mpiout 
+	rm mpiout 
