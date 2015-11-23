@@ -8,6 +8,6 @@
 #include<limits>
 #include<string>
 
-void MPI_Apsp(MPI_Comm, long, std::string, std::string);
+void MPI_Apsp(MPI_Comm, std::string, std::string);
 
 #endif

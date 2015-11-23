@@ -1,8 +1,8 @@
 CC=mpiCC
-CFLAGS=-c -Wall
+CXXFLAGS= -O3
 LDFLAGS=
-SOURCES=apsp-mpi.cpp
-OBJECTS=$(SOURCES:.c=.o)
+SOURCES=apspmpi.cpp apspmpi_driver.cpp
+OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=mpiout
 
 all: $(SOURCES) $(EXECUTABLE)
@@ -11,7 +11,7 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
 
 .c.o:
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CXXFLAGS) $< -o $@
 
 clean:
 	rm mpiout 
