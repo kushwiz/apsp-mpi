@@ -13,10 +13,10 @@ int main(int argc, char **argv)
 	int i = 0;
 	size_t len = 0;
 
-	fi = fopen("8x1.adj","r");
-	fo = fopen("8x1vec.bin","wb");
+	fi = fopen("9x1.adj","r");
+	fo = fopen("9x1vec.bin","wb");
 
-	cmd = popen("wc -l 8x1.adj", "r");
+	cmd = popen("wc -l 9x1.adj", "r");
 	fgets(buff, sizeof(buff), cmd);
 	total_lines = atoi(buff);
 
