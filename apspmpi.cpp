@@ -353,37 +353,35 @@ void MPI_Apsp(MPI_Comm COMM, std::string infile_path, std::string outfile_path, 
 		std::cout<<"Running time:" <<(t2-t0)<<std::endl;
 	}
 
-//	MPI_File_open(COMM, outfile_path.c_str(), MPI_MODE_WRONLY | MPI_MODE_CREATE, MPI_INFO_NULL, &outfile);
-//	MPI_File_set_view(outfile, (row_offset + col_offset)*sizeof(int), MPI_INT, MATRIX_INT_VECTOR, "native", MPI_INFO_NULL);
-//	if(rank==0) {
-//		std::cout<<"matrix size:"<<matrixBuffer.size()<<std::endl;
-//	}
-//	MPI_File_write(outfile, matrixBuffer.data(), matrixBuffer.size(),  MPI_INT, &status);
-//
-//	double t3 = MPI_Wtime();
-//	if(rank==MASTER) {
-//		std::cout<<"File Writing time:"<<t3-t2<<std::endl;
-//	}
-
 	MPI_File_close(&infile);
-//	MPI_File_close(&outfile);
 	MPI_Comm_free(&ROW_COMM);
 	MPI_Comm_free(&COL_COMM);
+        MPI_File_open(COMM, outfile_path.c_str(), MPI_MODE_WRONLY | MPI_MODE_CREATE, MPI_INFO_NULL, &outfile);
+
 	switch(pe_position) {
 		case INNER:
+                MPI_File_set_view(outfile, (row_offset + col_offset)*sizeof(int), MPI_INT, MATRIX_INT_INNER_VECTOR, "native", MPI_INFO_NULL);
+                MPI_File_write(outfile, matrixBuffer.data(), matrixBuffer.size(),  MPI_INT, &status);
 		MPI_Type_free(&MATRIX_INT_INNER_VECTOR);
 		break;
 
 		case RIGHT:
+                MPI_File_set_view(outfile, (row_offset + col_offset)*sizeof(int), MPI_INT, MATRIX_INT_RIGHT_EDGE_VECTOR, "native", MPI_INFO_NULL);
+                MPI_File_write(outfile, matrixBuffer.data(), matrixBuffer.size(),  MPI_INT, &status);
 		MPI_Type_free(&MATRIX_INT_RIGHT_EDGE_VECTOR);
 		break;
 
 		case LOWER:
+                MPI_File_set_view(outfile, (row_offset + col_offset)*sizeof(int), MPI_INT, MATRIX_INT_LOWER_EDGE_VECTOR, "native", MPI_INFO_NULL);
+                MPI_File_write(outfile, matrixBuffer.data(), matrixBuffer.size(),  MPI_INT, &status);
 		MPI_Type_free(&MATRIX_INT_LOWER_EDGE_VECTOR);
 		break;
 
 		case CORNER:
+                MPI_File_set_view(outfile, (row_offset + col_offset)*sizeof(int), MPI_INT, MATRIX_INT_LOWER_RIGHT_CORNER_VECTOR, "native", MPI_INFO_NULL);
+                MPI_File_write(outfile, matrixBuffer.data(), matrixBuffer.size(),  MPI_INT, &status);
 		MPI_Type_free(&MATRIX_INT_LOWER_RIGHT_CORNER_VECTOR);
 		break;
 	}
+        MPI_File_close(&outfile);
 }
