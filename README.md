@@ -3,7 +3,7 @@ APSP MPI: All pairs shortest path algorithm using MPI
 
 **Goal:**
 
-To parallelize the Floyd Warshall algorithm using MPI. The sequential version of the algorithm runs in O(n^3). Using 'p' processors, the running time reduces to O(n^3/p + n*log p) considering communication overheads.
+To parallelize the Floyd Warshall algorithm using MPI. The sequential version of the algorithm runs in O(n^3). Using 'p' processors, the running time reduces to O(n<sup>3</sup>/p + nlog p) considering communication overheads.
 
 **Implementation:**
 
