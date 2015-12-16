@@ -31,13 +31,13 @@ Some interesting observations:
 Below are the experimental results obtained for different sizes of input graph data.
 
 The below graph shows the speedup of the algorithm for different number of cores using a 4000x4000 node input dense matrix.
-![](4000node.png)
+![](graphs/4000node.png)
 
 The below graph shows the speedup of the algorithm for different number of cores using a 6000x6000 node input dense matrix.
-![](6000node.png)
+![](graphs/6000node.png)
 
 The below graph shows the speedup of the algorithm for different number of cores using a 10000x10000 node input dense matrix.
-![](10000node.png)
+![](graphs/10000node.png)
 
 
 
