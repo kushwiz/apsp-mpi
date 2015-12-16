@@ -30,11 +30,14 @@ Some interesting observations:
 To substantiate the correctness and performance of the implementation, tests were run with different combinations (compute nodes x cores). The running time of the algorithm is the factor determining the efficiency of this algorithm. Speedup and Efficiency was calculated for different the combinations and the observations have been analyzed using graphs.
 
 The below graph shows the speedup of the algorithm for different number of cores using a 4000x4000 node input dense matrix. Here, we can see that the speedup is close to linear for configurations upto 16 cores and then its gradually drops (Amdahl's law, Strong scaling - holds here as we are able achieve good speedup only upto a certain configuration and thereafter the speedup reduces).
+
 ![](graphs/4000node.png)
 
 
 The below graph shows the speedup of the algorithm for different number of cores using a 6000x6000 node input dense matrix.
+
 ![](graphs/6000node.png)
 
 The below graph shows the speedup of the algorithm for different number of cores using a 10000x10000 node input dense matrix. Here, we can see that the speedup is close to linear for configurations upto 25 cores, also the speedup is slightly higher than the ones seen in the 4000x4000 node matrix (Gustafson's law, Weak scaling - holds here as we are increasing the input data size and achieving better speedup).
+
 ![](graphs/10000node.png)
